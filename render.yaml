@@ -1,8 +1,16 @@
-# This project is deployed on Vercel.
-# render.yaml is no longer used.
-#
-# Backend:  deploy the /backend directory as a separate Vercel project
-#           vercel.json is at backend/vercel.json
-#
-# Frontend: deploy the /Expensely directory as a separate Vercel project
-#           vercel.json is at Expensely/vercel.json
+services:
+  - type: web
+    name: expensely-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 7d
