@@ -1,0 +1,8 @@
+# This project is deployed on Vercel.
+# render.yaml is no longer used.
+#
+# Backend:  deploy the /backend directory as a separate Vercel project
+#           vercel.json is at backend/vercel.json
+#
+# Frontend: deploy the /Expensely directory as a separate Vercel project
+#           vercel.json is at Expensely/vercel.json
