@@ -27,24 +27,24 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen flex bg-[#f8fafc]">
       {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-      <aside className="w-64 hidden md:flex flex-col bg-[#0f172a] shadow-2xl flex-shrink-0">
+      <aside className="w-64 hidden md:flex flex-col bg-white border-r border-gray-100 shadow-sm flex-shrink-0">
 
         {/* Logo */}
-        <div className="px-6 py-5 border-b border-white/5">
+        <div className="px-6 py-5 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-2 rounded-xl shadow-lg shadow-blue-900/40">
+            <div className="bg-blue-600 p-2 rounded-xl shadow-sm shadow-blue-200">
               <Receipt className="h-5 w-5 text-white" />
             </div>
             <div>
-              <span className="text-white font-bold text-lg tracking-tight">Expensely</span>
-              <p className="text-slate-500 text-[10px] font-medium tracking-widest uppercase">Finance Tracker</p>
+              <span className="text-gray-900 font-bold text-lg tracking-tight">Expensely</span>
+              <p className="text-gray-400 text-[10px] font-semibold tracking-widest uppercase">Finance Tracker</p>
             </div>
           </div>
         </div>
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          <p className="text-slate-600 text-[10px] font-semibold uppercase tracking-widest px-3 mb-3">Menu</p>
+          <p className="text-gray-400 text-[10px] font-semibold uppercase tracking-widest px-3 mb-3">Menu</p>
           {navItems.map((item) => (
             <NavLink
               key={item.name}
@@ -52,20 +52,20 @@ export default function AppLayout() {
               className={({ isActive }) =>
                 `group flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 ${
                   isActive
-                    ? 'bg-white/10 text-white shadow-inner'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-200'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`
               }
             >
               {({ isActive }) => (
                 <>
                   <div className="flex items-center gap-3">
-                    <div className={`p-1.5 rounded-lg transition-all ${isActive ? 'bg-white/10' : 'bg-transparent group-hover:bg-white/5'}`}>
+                    <div className={`p-1.5 rounded-lg transition-all ${isActive ? 'bg-white/20' : 'bg-transparent'}`}>
                       <item.icon className={`h-4 w-4 ${isActive ? 'text-white' : item.color}`} />
                     </div>
                     <span className="text-sm font-medium">{item.name}</span>
                   </div>
-                  {isActive && <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />}
+                  {isActive && <div className="w-1.5 h-1.5 rounded-full bg-white/70" />}
                 </>
               )}
             </NavLink>
@@ -73,17 +73,17 @@ export default function AppLayout() {
         </nav>
 
         {/* User Section */}
-        <div className="p-3 border-t border-white/5">
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5 mb-1">
-            <img src={avatarUrl} alt="avatar" className="h-8 w-8 rounded-full ring-2 ring-blue-500/30 flex-shrink-0" />
+        <div className="p-3 border-t border-gray-100">
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gray-50 mb-1">
+            <img src={avatarUrl} alt="avatar" className="h-8 w-8 rounded-full ring-2 ring-blue-100 flex-shrink-0" />
             <div className="overflow-hidden flex-1">
-              <p className="text-white text-sm font-semibold truncate leading-tight">{currentUser?.displayName || 'User'}</p>
-              <p className="text-slate-500 text-xs truncate">{currentUser?.email}</p>
+              <p className="text-gray-900 text-sm font-semibold truncate leading-tight">{currentUser?.displayName || 'User'}</p>
+              <p className="text-gray-400 text-xs truncate">{currentUser?.email}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all text-sm font-medium group"
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all text-sm font-medium group"
           >
             <LogOut className="h-4 w-4 group-hover:scale-110 transition-transform" />
             Sign Out
