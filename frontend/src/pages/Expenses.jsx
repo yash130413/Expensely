@@ -5,7 +5,19 @@ import { useOffline } from '../context/OfflineContext';
 import { expensesApi } from '../lib/api';
 import { getLocalExpenses, addLocalExpense, updateLocalExpense, deleteLocalExpense, addToSyncQueue } from '../lib/db';
 import ExpenseModal from '../components/ExpenseModal';
-import { Plus, Edit2, Trash2, IndianRupee, Calendar, WifiOff } from 'lucide-react';
+import { Plus, Edit2, Trash2, IndianRupee, WifiOff, Search } from 'lucide-react';
+
+const CATEGORY_COLORS = {
+  Food: 'bg-orange-100 text-orange-700',
+  Travel: 'bg-blue-100 text-blue-700',
+  Shopping: 'bg-pink-100 text-pink-700',
+  Utilities: 'bg-yellow-100 text-yellow-700',
+  Healthcare: 'bg-green-100 text-green-700',
+  Entertainment: 'bg-purple-100 text-purple-700',
+  Education: 'bg-indigo-100 text-indigo-700',
+  Rent: 'bg-red-100 text-red-700',
+  Miscellaneous: 'bg-gray-100 text-gray-700',
+};
 
 export default function Expenses() {
   const { currentUser } = useAuth();
@@ -13,6 +25,7 @@ export default function Expenses() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
+  const [search, setSearch] = useState('');
 
   const { data: expenses = [], isLoading, isError } = useQuery({
     queryKey: ['expenses'],
@@ -64,117 +77,121 @@ export default function Expenses() {
   });
 
   const handleSave = (expenseData) => {
-    if (editingExpense) {
-      updateMutation.mutate({ ...expenseData, _id: editingExpense._id });
-    } else {
-      createMutation.mutate(expenseData);
-    }
+    if (editingExpense) updateMutation.mutate({ ...expenseData, _id: editingExpense._id });
+    else createMutation.mutate(expenseData);
   };
 
-  const handleEdit = (expense) => { setEditingExpense(expense); setIsModalOpen(true); };
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this expense?')) deleteMutation.mutate(id);
-  };
+  const filtered = expenses.filter(e =>
+    e.title.toLowerCase().includes(search.toLowerCase()) ||
+    e.category.toLowerCase().includes(search.toLowerCase()) ||
+    (e.merchantName || '').toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalFiltered = filtered.reduce((sum, e) => sum + e.amount, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Expenses</h1>
-        <div className="flex items-center gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Expenses</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{expenses.length} total transactions</p>
+        </div>
+        <div className="flex items-center gap-2.5">
           {!online && (
-            <span className="flex items-center text-xs text-orange-600 bg-orange-50 border border-orange-200 px-2 py-1 rounded-lg">
-              <WifiOff className="h-3 w-3 mr-1" /> Offline
+            <span className="flex items-center text-xs text-orange-600 bg-orange-50 border border-orange-200 px-3 py-1.5 rounded-lg gap-1">
+              <WifiOff className="h-3 w-3" /> Offline
             </span>
           )}
           <button
             onClick={() => { setEditingExpense(null); setIsModalOpen(true); }}
-            className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700 transition-all shadow-sm shadow-blue-200"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Expense
+            <Plus className="h-4 w-4" /> Add Expense
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        {isLoading ? (
-          <div className="p-8 text-center text-gray-500">Loading expenses...</div>
-        ) : isError ? (
-          <div className="p-8 text-center text-red-500">Failed to load expenses. Is backend running?</div>
-        ) : expenses.length === 0 ? (
-          <div className="p-12 text-center text-gray-500 flex flex-col items-center">
-            <div className="bg-gray-50 p-4 rounded-full mb-4">
-              <IndianRupee className="h-8 w-8 text-gray-400" />
-            </div>
-            <p className="text-lg font-medium text-gray-900">No expenses found</p>
-            <p className="mt-1">Add your first expense to start tracking!</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-600">
-              <thead className="bg-gray-50 text-xs uppercase text-gray-500 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-4 font-medium">Date</th>
-                  <th className="px-6 py-4 font-medium">Details</th>
-                  <th className="px-6 py-4 font-medium">Category</th>
-                  <th className="px-6 py-4 font-medium">Amount</th>
-                  <th className="px-6 py-4 font-medium text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {expenses.map((expense) => (
-                  <tr key={expense._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 text-gray-400 mr-2" />
-                        {new Date(expense.expenseDate).toLocaleDateString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">{expense.title}</div>
-                      {expense.merchantName && (
-                        <div className="text-xs text-gray-500">{expense.merchantName}</div>
-                      )}
-                      {expense.createdOffline && (
-                        <span className="text-xs text-orange-500">• Pending sync</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {expense.category}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 font-medium text-gray-900">
-                      ₹{expense.amount.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button
-                        onClick={() => handleEdit(expense)}
-                        className="text-gray-400 hover:text-blue-600 transition-colors"
-                      >
-                        <Edit2 className="h-4 w-4 inline" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(expense._id)}
-                        className="text-gray-400 hover:text-red-600 transition-colors"
-                      >
-                        <Trash2 className="h-4 w-4 inline" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {/* Search + Summary */}
+      <div className="flex items-center gap-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search expenses..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          />
+        </div>
+        {filtered.length > 0 && (
+          <p className="text-sm text-gray-500">
+            Total: <span className="font-bold text-gray-900">₹{totalFiltered.toLocaleString('en-IN')}</span>
+          </p>
         )}
       </div>
 
-      <ExpenseModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSave}
-        initialData={editingExpense}
-      />
+      {/* Table */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        {isLoading ? (
+          <div className="py-16 text-center text-gray-400">
+            <div className="animate-pulse space-y-3 px-6">
+              {[1,2,3].map(i => <div key={i} className="h-12 bg-gray-100 rounded-xl" />)}
+            </div>
+          </div>
+        ) : isError ? (
+          <div className="py-16 text-center">
+            <p className="text-red-500 font-medium">Failed to load expenses</p>
+            <p className="text-gray-400 text-sm mt-1">Make sure the backend is running</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="bg-gray-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <IndianRupee className="h-7 w-7 text-gray-300" />
+            </div>
+            <p className="text-gray-900 font-semibold">{search ? 'No results found' : 'No expenses yet'}</p>
+            <p className="text-gray-400 text-sm mt-1">{search ? 'Try a different search term' : 'Add your first expense to start tracking'}</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-[1fr_2fr_1fr_1fr_auto] text-xs font-semibold text-gray-400 uppercase tracking-wider px-6 py-3 border-b border-gray-50 bg-gray-50/80">
+              <span>Date</span>
+              <span>Details</span>
+              <span>Category</span>
+              <span>Amount</span>
+              <span className="text-right">Actions</span>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {filtered.map((expense) => (
+                <div key={expense._id} className="grid grid-cols-[1fr_2fr_1fr_1fr_auto] items-center px-6 py-3.5 hover:bg-gray-50/60 transition-colors">
+                  <span className="text-sm text-gray-500">{new Date(expense.expenseDate).toLocaleDateString('en-IN')}</span>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{expense.title}</p>
+                    {expense.merchantName && <p className="text-xs text-gray-400">{expense.merchantName}</p>}
+                    {expense.createdOffline && <span className="text-xs text-orange-500">• Pending sync</span>}
+                  </div>
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full w-fit ${CATEGORY_COLORS[expense.category] || 'bg-gray-100 text-gray-600'}`}>
+                    {expense.category}
+                  </span>
+                  <span className="text-sm font-bold text-gray-900">₹{expense.amount.toLocaleString('en-IN')}</span>
+                  <div className="flex items-center gap-1 justify-end">
+                    <button onClick={() => { setEditingExpense(expense); setIsModalOpen(true); }}
+                      className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </button>
+                    <button onClick={() => { if (window.confirm('Delete this expense?')) deleteMutation.mutate(expense._id); }}
+                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      <ExpenseModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSave} initialData={editingExpense} />
     </div>
   );
 }
