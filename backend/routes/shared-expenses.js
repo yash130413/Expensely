@@ -175,7 +175,7 @@ router.post('/group/:groupId/settle', async (req, res) => {
 // GET settlement summary for a group
 router.get('/group/:groupId/summary', async (req, res) => {
   try {
-    const expenses = await SharedExpense.find({ groupId: req.params.groupId });
+    const expenses = await SharedExpense.find({ groupId: req.params.groupId, settled: false });
 
     const summary = {
       totalExpenses: expenses.length,
